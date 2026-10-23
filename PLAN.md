@@ -42,6 +42,20 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 - [x] Create folders: `mkdir -p trino/catalog`
 - [x] `docker-compose.yml` at repo root with 3 services: minio, iceberg-catalog, trino (`minio-init`/mc **removed** — bucket is created by hand)
 - [ ] `warehouse` bucket created **manually** via MinIO web console (named exactly `warehouse`, lowercase)
+
+  <details><summary>Console steps (MinIO web UI)</summary>
+
+  1. Confirm MinIO is up: `docker compose ps` → `minio` running
+  2. Open **http://localhost:9001** in the browser
+  3. Log in with the values from `.env` → user: `admin`, password: `change-me-123`
+  4. Sidebar → **Object Browser** (newer UI: *Administrator → Buckets*)
+  5. Click **Create Bucket**
+  6. Name: **`warehouse`** — exactly, lowercase, no spaces (both `docker-compose.yml` and `trino/catalog/iceberg.properties` point to `s3://warehouse/`)
+  7. Leave everything default: Versioning OFF, Object Lock OFF, Quota OFF (Iceberg snapshots = our versioning already)
+  8. Click **Create Bucket**
+  9. Verify: bucket listed and empty — it fills only after the first Trino `CREATE TABLE` (then you'll see `bronze/…` with `data/` and `metadata/` folders)
+
+  </details>
 - [x] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
 - [ ] `docker compose up -d` — all containers healthy
 - [ ] Schemas created in Trino: `iceberg.bronze`, `iceberg.silver`, `iceberg.gold`
