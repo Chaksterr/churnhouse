@@ -1,0 +1,18 @@
+# secrets
+.env
+
+# raw + generated data (stays local, never committed)
+data/
+
+# build artifacts
+target/
+dbt/logs/
+dbt/profiles.yml
+__pycache__/
+.venv/
+*.duckdb
+
+# editors / OS
+.DS_Store
+.idea/
+*.swp
