@@ -39,7 +39,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 1 — 🪨 Bedrock (lakehouse core: MinIO + Iceberg + Trino)
 
-- [x] Create folders: `mkdir -p trino/catalog docs/screenshots`
+- [x] Create folders: `mkdir -p trino/catalog`
 - [x] `docker-compose.yml` at repo root with 4 services: minio, minio-init, iceberg-catalog, trino
 - [x] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
 - [ ] `docker compose up -d` — all containers healthy
@@ -48,7 +48,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 - [ ] **Exercise — change:** run UPDATE then DELETE on smoke_test; after each write, query snapshots/files tables & record row/code changes
 - [ ] **Exercise — break (once):** delete one `metadata.json` in MinIO, query the table, write down the failure
 - [ ] **Exercise — draw:** sketch the 4 levels (metadata.json → manifest list → manifests → Parquet) from memory
-- [ ] 3 screenshots in `docs/screenshots/`
+- [ ] 3 screenshots (take them, keep locally on your machine — this repo has no screenshots folder; they feed your CV/portfolio, not git)
 - [ ] Commit
 
 **Done when:** SELECT works + you can explain the 4 Iceberg levels without notes.
@@ -131,7 +131,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 - [ ] Connection: `trino://...@trino:8080/iceberg/gold`
 - [ ] 4 datasets registered: customer_360, customer_risk, monthly_revenue, risk_validation
 - [ ] 4 charts: revenue line · customers per risk band · churn rate per band · top-20 risky table
-- [ ] 1 dashboard with all 4 + screenshot in `docs/screenshots`
+- [ ] 1 dashboard with all 4 + screenshot (kept locally, for your CV/portfolio)
 - [ ] **Stop here — no decorating.** Value is in Phases 4/7, not chart colors.
 
 **Done when:** dashboard shows 4 charts + churn-per-band matches `risk_validation`.
@@ -160,7 +160,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 ## Phase 8 — 🚀 Launch (docs + story)
 
 - [ ] README: architecture diagram (draw.io/Excalidraw or mermaid) + quickstart a stranger can run
-- [ ] Screenshots incl. Superset dashboard
+- [ ] Local screenshots incl. Superset dashboard (not committed — used for LinkedIn/portfolio)
 - [ ] Short "what I broke and what I learned" section (use your Phase 1 break note)
 - [ ] Optional: 2-minute demo video
 - [ ] Stranger-test: fresh clone + README instructions → working dashboard
