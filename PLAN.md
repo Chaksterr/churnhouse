@@ -6,6 +6,8 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 **Ground rule:** folders are created *inside the phase that needs them* (first checklist item of each phase). No pre-building the whole tree.
 
+**Python rule:** we use **uv** only — no raw pip/`python -m venv`. One project at the repo root: `pyproject.toml` declares dependencies, `uv.lock` pins them (both committed), one shared `.venv/` for generator + dlt + dbt. Any "install X" step below means `uv add X`.
+
 | Day | Phase(s) | Name |
 |---|---|---|
 | 1 | 0 + 1 | Blueprint → Bedrock |
@@ -58,7 +60,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 ## Phase 2 — 🛠 Data Forge (synthetic sources)
 
 - [ ] Create folder: `mkdir generator`
-- [ ] Python venv + `Faker`
+- [ ] uv project at repo root: `uv init` + `uv add faker` (pyproject.toml + uv.lock + .venv/)
 - [ ] `generator/generate.py` with fixed seed (reproducible)
 - [ ] `support_tickets.csv` ~5,000 rows, linked to real customer IDs from the Telco file
 - [ ] `payments.csv` ~30,000 rows, linked to real customer IDs
@@ -75,7 +77,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 ## Phase 3 — 🚚 Ingestion (dlt → Bronze)
 
 - [ ] Create folder: `mkdir ingestion`
-- [ ] venv with dlt installed
+- [ ] dlt + Trino support: `uv add "dlt[trino]"`
 - [ ] `ingestion/load_bronze.py` loads the 3 CSVs into `iceberg.bronze.*`
 - [ ] Audit columns on every row: `ingested_at`, `source_file`
 - [ ] Append-only mode (old rows never rewritten)
@@ -91,6 +93,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 ## Phase 4 — 🧪 Refinery (dbt Silver: clean, mask, quarantine)
 
 - [ ] Create folders: `mkdir -p dbt/models/silver dbt/models/gold dbt/tests dbt/macros`
+- [ ] dbt engine via uv: `uv add dbt-trino`
 - [ ] dbt project initialized + connected to Trino
 - [ ] `stg_customers`: blank `TotalCharges` fixed explicitly, Yes/No → boolean, snake_case columns
 - [ ] `stg_tickets` + `stg_payments`: typed, deduped
