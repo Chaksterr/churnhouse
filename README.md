@@ -33,4 +33,4 @@ GOLD    customer_360 · customer_risk · monthly_revenue · risk_validation
 
 ## Status
 
-Phases 0–8 still under construction. See PLAN.md for the checklist.
+Phases 0–8 under construction.
