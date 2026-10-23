@@ -1,6 +1,8 @@
 # churnhouse — the lakehouse core
-# 4 services: disk (MinIO) → catalog (Iceberg REST) → SQL window (Trino)
+# 3 services: disk (MinIO) → catalog (Iceberg REST) → SQL window (Trino)
 # Your credentials come from .env (same folder).
+# NOTE: the `warehouse` bucket is created MANUALLY once, via the MinIO web console
+# (http://localhost:9001 → Object Browser → Create Bucket → name: warehouse).
 
 services:
   minio:
@@ -13,24 +15,11 @@ services:
     ports: ["9000:9000", "9001:9001"]
     volumes: [minio-data:/data]
 
-  # runs once at startup: waits for MinIO, creates the "warehouse" bucket, exits
-  minio-init:
-    image: minio/mc:latest
-    depends_on: [minio]
-    environment:
-      MINIO_USER: ${MINIO_USER}
-      MINIO_PASSWORD: ${MINIO_PASSWORD}
-    entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://minio:9000 $$MINIO_USER $$MINIO_PASSWORD; do sleep 2; done;
-      mc mb -p local/warehouse;
-      exit 0"
-
   # the "address book": every tool asks it which tables exist and where their files are
   iceberg-catalog:
     image: tabulario/iceberg-rest:latest
     container_name: iceberg-catalog
-    depends_on: [minio-init]
+    depends_on: [minio]
     ports: ["8181:8181"]
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_USER}

@@ -40,7 +40,8 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 ## Phase 1 — 🪨 Bedrock (lakehouse core: MinIO + Iceberg + Trino)
 
 - [x] Create folders: `mkdir -p trino/catalog`
-- [x] `docker-compose.yml` at repo root with 4 services: minio, minio-init, iceberg-catalog, trino
+- [x] `docker-compose.yml` at repo root with 3 services: minio, iceberg-catalog, trino (`minio-init`/mc **removed** — bucket is created by hand)
+- [ ] `warehouse` bucket created **manually** via MinIO web console (named exactly `warehouse`, lowercase)
 - [x] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
 - [ ] `docker compose up -d` — all containers healthy
 - [ ] Schemas created in Trino: `iceberg.bronze`, `iceberg.silver`, `iceberg.gold`
@@ -159,7 +160,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 8 — 🚀 Launch (docs + story)
 
-- [ ] README: architecture diagram (draw.io/Excalidraw or mermaid) + quickstart a stranger can run
+- [ ] README: architecture diagram (mermaid) + quickstart a stranger can run (includes the manual step: create the `warehouse` bucket in the MinIO console)
 - [ ] Local screenshots incl. Superset dashboard (not committed — used for LinkedIn/portfolio)
 - [ ] Short "what I broke and what I learned" section (use your Phase 1 break note)
 - [ ] Optional: 2-minute demo video
