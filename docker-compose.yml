@@ -1,0 +1,56 @@
+# churnhouse — the lakehouse core
+# 4 services: disk (MinIO) → catalog (Iceberg REST) → SQL window (Trino)
+# Your credentials come from .env (same folder).
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio-data:/data]
+
+  # runs once at startup: waits for MinIO, creates the "warehouse" bucket, exits
+  minio-init:
+    image: minio/mc:latest
+    depends_on: [minio]
+    environment:
+      MINIO_USER: ${MINIO_USER}
+      MINIO_PASSWORD: ${MINIO_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $$MINIO_USER $$MINIO_PASSWORD; do sleep 2; done;
+      mc mb -p local/warehouse;
+      exit 0"
+
+  # the "address book": every tool asks it which tables exist and where their files are
+  iceberg-catalog:
+    image: tabulario/iceberg-rest:latest
+    container_name: iceberg-catalog
+    depends_on: [minio-init]
+    ports: ["8181:8181"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://minio:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+
+  # the SQL window over the tables
+  trino:
+    image: trinodb/trino:470
+    container_name: trino
+    depends_on: [iceberg-catalog]
+    ports: ["8080:8080"]
+    environment:
+      MINIO_USER: ${MINIO_USER}
+      MINIO_PASSWORD: ${MINIO_PASSWORD}
+    volumes: ["./trino/catalog:/etc/trino/catalog"]
+
+volumes:
+  minio-data:

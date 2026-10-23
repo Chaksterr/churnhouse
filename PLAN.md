@@ -37,9 +37,9 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 1 — 🪨 Bedrock (lakehouse core: MinIO + Iceberg + Trino)
 
-- [ ] Create folders: `mkdir -p trino/catalog docs/screenshots`
-- [ ] `docker-compose.yml` at repo root with 4 services: minio, minio-init, iceberg-catalog, trino
-- [ ] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
+- [x] Create folders: `mkdir -p trino/catalog docs/screenshots`
+- [x] `docker-compose.yml` at repo root with 4 services: minio, minio-init, iceberg-catalog, trino
+- [x] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
 - [ ] `docker compose up -d` — all containers healthy
 - [ ] Schemas created in Trino: `iceberg.bronze`, `iceberg.silver`, `iceberg.gold`
 - [ ] Smoke test: create `bronze.smoke_test`, INSERT 1 row, SELECT returns it
