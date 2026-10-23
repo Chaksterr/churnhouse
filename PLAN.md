@@ -4,6 +4,8 @@ Use this file as your working log: **tick `[ ]` → `[x]` as you go. One phase a
 
 Target: full platform in **~1 week** (~30 focused hours) — one or two phases per day.
 
+**Ground rule:** folders are created *inside the phase that needs them* (first checklist item of each phase). No pre-building the whole tree.
+
 | Day | Phase(s) | Name |
 |---|---|---|
 | 1 | 0 + 1 | Blueprint → Bedrock |
@@ -18,14 +20,14 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 0 — 🧭 Blueprint (repo + raw data)
 
-- [x] Folder structure created (data, generator, ingestion, dbt/{models/{silver,gold},tests,macros}, orchestration, automation, maintenance, .github/workflows, trino/catalog, docs/screenshots)
+- [x] Repo root ready — only `data/raw/` created (for the dataset); every other folder comes later, inside the phase that needs it
 - [x] `git init` on branch `main`
 - [x] `.gitignore` covers .env, data/, target/, .venv/, *.duckdb
 - [x] `.env` (real values, local only) + `.env.example` (fake values, committed)
 - [x] README stub
-- [ ] Dataset downloaded → `data/raw/telco_customers.csv`
-- [ ] Row check: `wc -l` ≈ 7044
-- [ ] Sanity: `git status` shows neither `.env` nor `data/` (i.e. both ignored)
+- [x] Dataset downloaded → `data/raw/telco_customers.csv` (7044 lines ✓)
+- [x] Row check: `wc -l` ≈ 7044
+- [x] Sanity: `.env` and `data/` both ignored (verified with `git check-ignore`)
 
 **Done when:** ~7044 rows downloaded + `.env`/`data/` actually ignored by git.
 
@@ -35,6 +37,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 1 — 🪨 Bedrock (lakehouse core: MinIO + Iceberg + Trino)
 
+- [ ] Create folders: `mkdir -p trino/catalog docs/screenshots`
 - [ ] `docker-compose.yml` at repo root with 4 services: minio, minio-init, iceberg-catalog, trino
 - [ ] `trino/catalog/iceberg.properties` written (REST catalog → iceberg-catalog:8181, native S3 → minio:9000, lab min-retention = 0s)
 - [ ] `docker compose up -d` — all containers healthy
@@ -54,6 +57,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 2 — 🛠 Data Forge (synthetic sources)
 
+- [ ] Create folder: `mkdir generator`
 - [ ] Python venv + `Faker`
 - [ ] `generator/generate.py` with fixed seed (reproducible)
 - [ ] `support_tickets.csv` ~5,000 rows, linked to real customer IDs from the Telco file
@@ -70,6 +74,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 3 — 🚚 Ingestion (dlt → Bronze)
 
+- [ ] Create folder: `mkdir ingestion`
 - [ ] venv with dlt installed
 - [ ] `ingestion/load_bronze.py` loads the 3 CSVs into `iceberg.bronze.*`
 - [ ] Audit columns on every row: `ingested_at`, `source_file`
@@ -85,6 +90,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 4 — 🧪 Refinery (dbt Silver: clean, mask, quarantine)
 
+- [ ] Create folders: `mkdir -p dbt/models/silver dbt/models/gold dbt/tests dbt/macros`
 - [ ] dbt project initialized + connected to Trino
 - [ ] `stg_customers`: blank `TotalCharges` fixed explicitly, Yes/No → boolean, snake_case columns
 - [ ] `stg_tickets` + `stg_payments`: typed, deduped
@@ -116,6 +122,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 6 — 📊 Showcase (Superset, minimized)
 
+- [ ] Create folder: `mkdir superset` (its compose file lives there)
 - [ ] Superset in Docker on :8088, admin user created
 - [ ] Trino driver installed in the Superset container
 - [ ] Connection: `trino://...@trino:8080/iceberg/gold`
@@ -132,6 +139,7 @@ Target: full platform in **~1 week** (~30 focused hours) — one or two phases p
 
 ## Phase 7 — 🕹 Ops Room (Airflow + CI, minimized)
 
+- [ ] Create folders: `mkdir orchestration .github/workflows`
 - [ ] Airflow in Docker on :8081
 - [ ] Daily DAG at 02:00: `ingest → silver → gold` with dbt tests between layers, `retries=2`
 - [ ] Freshness check: Gold older than 24h ⇒ task failure
