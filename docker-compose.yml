@@ -1,21 +1,21 @@
-# churnhouse — the lakehouse core
-# 3 services: disk (MinIO) → catalog (Iceberg REST) → SQL window (Trino)
-# Your credentials come from .env (same folder).
-# NOTE: the `warehouse` bucket is created MANUALLY once, via the MinIO web console
-# (http://localhost:9001 → Object Browser → Create Bucket → name: warehouse).
+# churnhouse lakehouse: minio (disk) + iceberg REST catalog (address book) + trino (SQL)
+# creds come from .env | bucket `warehouse` is created by hand in the console (:9001)
 
 services:
+  # disk: S3-style storage. data lives in the minio-data volume.
   minio:
-    image: minio/minio:latest
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     container_name: minio
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_USER: ${MINIO_USER}        # bitnami names them MINIO_ROOT_*
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+      MINIO_API_PORT_NUMBER: "9000"
+      MINIO_CONSOLE_PORT_NUMBER: "9001"
+      MINIO_BROWSER: "on"                   # bitnami quirk: console is OFF without this
     ports: ["9000:9000", "9001:9001"]
-    volumes: [minio-data:/data]
+    volumes: [minio-data:/bitnami/minio/data]
 
-  # the "address book": every tool asks it which tables exist and where their files are
+  # knows which tables exist and where the metadata files are
   iceberg-catalog:
     image: tabulario/iceberg-rest:latest
     container_name: iceberg-catalog
@@ -27,10 +27,10 @@ services:
       AWS_REGION: us-east-1
       CATALOG_WAREHOUSE: s3://warehouse/
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
-      CATALOG_S3_ENDPOINT: http://minio:9000
-      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+      CATALOG_S3_ENDPOINT: http://minio:9000      # MinIO, not real AWS
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"      # MinIO answer: yes path-style authentication
 
-  # the SQL window over the tables
+  # SQL engine: dlt loads through it, dbt runs through it, superset reads through it
   trino:
     image: trinodb/trino:470
     container_name: trino
@@ -39,7 +39,7 @@ services:
     environment:
       MINIO_USER: ${MINIO_USER}
       MINIO_PASSWORD: ${MINIO_PASSWORD}
-    volumes: ["./trino/catalog:/etc/trino/catalog"]
+    volumes: ["./trino/catalog:/etc/trino/catalog"]   # our iceberg.properties is the config
 
 volumes:
   minio-data:

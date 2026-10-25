@@ -3,6 +3,7 @@
 
 # personal working notes (local only, never pushed)
 PLAN.md
+CONCEPTS.md
 
 # raw + generated data (stays local, never committed)
 data/

@@ -1,36 +1,61 @@
-# churnhouse — Customer 360 Lakehouse
+# churnhouse
 
-A small data platform for a telecom company that answers one question:
+A small data platform for a telecom company that answers:
 **which customers are likely to churn, and why?**
+The value is in the *pipeline*, not in a dashboard project.
 
-- **Storage**: MinIO (S3-compatible) + Apache Iceberg tables
-- **Query engine**: Trino (Superset reads through it)
-- **Ingestion**: dlt (Python) — append-only Bronze
-- **Transformation**: dbt — Silver (clean) → Gold (business models)
-- **Dashboards**: Superset
-- **Orchestration**: Airflow — daily runs, retries, alerts
-- **CI**: GitHub Actions runs dbt tests on every PR
-
-3 raw sources (telco customers CSV, generated support tickets, generated payments)
-→ Bronze → Silver → Gold, with data quality tests at every layer.
-
-## Architecture
+## Architecture (simple)
 
 ```
-3 CSV files
-    |
-    v
-dlt (Python)  copies as-is
-    |
-BRONZE  raw, append-only
-    |  dbt
-SILVER  clean, masked, deduped, rejected_rows
-    |  dbt
-GOLD    customer_360 · customer_risk · monthly_revenue · risk_validation
-    |
-    +--> Superset (through Trino)
+3 CSVs (CRM · support · billing)
+      │
+      ▼
+   dlt  ──►  BRONZE (raw, append-only)  ──  MinIO + Iceberg + Trino
+      │   dbt
+      ▼
+   SILVER (clean, masked, tested) ── bad rows → rejected_rows
+      │   dbt
+      ▼
+   GOLD  (customer_360 · risk score + reasons · validation)
+      │
+      ▼
+   Superset dashboards          Airflow runs it daily + alerts
 ```
 
-## Status
+**Everything is Iceberg tables on MinIO, read through Trino.**
+Airflow orchestrates nightly. GitHub Actions tests every PR.
 
-Phases 0–8 under construction.
+## Tools used
+
+| Tool | One job |
+|---|---|
+| **MinIO** | the disk (S3-compatible object storage) |
+| **Iceberg** | tables with snapshots / time travel on files |
+| **REST catalog** | the shared registry of tables |
+| **Trino** | the SQL engine (dlt, dbt, Superset all query through it) |
+| **dlt** | append-only ingestion with audit columns |
+| **dbt** | SQL transforms + tests in version control |
+| **Superset** | dashboards |
+| **Airflow** | orchestration + retries + freshness SLA |
+| **uv** | reproducible Python installs (lockfile-committed) |
+
+## Quickstart
+
+```bash
+cp .env.example .env && docker compose up -d    # lakehouse
+# console http://localhost:9001 → create bucket "warehouse"
+uv sync
+uv run python generator/generate.py             # deterministic synthetic data
+```
+
+Under construction: ingestion → dbt layers → dashboard → orchestration.
+
+## Repo map
+
+```
+├── docker-compose.yml      # minio + iceberg catalog + trino
+├── generator/generate.py   # synthetic sources (seeded)
+├── ingestion/              # dlt → bronze
+├── dbt/                    # silver + gold models + tests
+└── orchestration/          # airflow dags + CI
+```
