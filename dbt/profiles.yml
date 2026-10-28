@@ -1,0 +1,11 @@
+churnhouse:
+  target: dev
+  outputs:
+    dev:
+      type: trino
+      host: localhost
+      port: 8080
+      user: admin
+      catalog: iceberg
+      schema: silver
+      threads: 2

@@ -1,0 +1,11 @@
+name: churnhouse
+version: "1.0.0"
+profile: churnhouse
+
+model-paths: ["models"]
+test-paths: ["tests"]
+clean-targets: ["target"]
+
+models:
+  churnhouse:
+    +materialized: table   # real iceberg tables, not views

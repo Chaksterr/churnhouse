@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: iceberg   # dbt-trino: database = trino catalog
+    schema: bronze
+    tables:
+      - name: customers
+      - name: support_tickets
+      - name: payments
+      - name: customers_contact

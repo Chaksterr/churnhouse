@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: tenure
+        data_tests: [not_null]
+      - name: monthly_charges
+        data_tests: [not_null]
+      - name: churn
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+                quote: false
+
+  - name: stg_tickets
+    columns:
+      - name: ticket_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests: [not_null]
+      - name: category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [billing_dispute, technical_issue, network_quality, service_change, general_inquiry]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [open, resolved, closed]
+      - name: satisfaction_score
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_payments
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests: [not_null]
+      - name: payment_date
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [succeeded, failed]
+
+  - name: stg_customers_contact
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+
+  - name: rejected_rows
+    columns:
+      - name: reason
+        data_tests: [not_null]

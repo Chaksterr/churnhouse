@@ -4,6 +4,7 @@
 # personal working notes (local only, never pushed)
 PLAN.md
 CONCEPTS.md
+PHASE4.md
 
 # raw + generated data (stays local, never committed)
 data/
@@ -11,7 +12,8 @@ data/
 # build artifacts
 target/
 dbt/logs/
-dbt/profiles.yml
+dbt/.user.yml
+# dbt profile: committed on purpose — trino needs no password (host/port/user only)
 __pycache__/
 .venv/
 *.duckdb

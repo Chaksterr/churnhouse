@@ -21,6 +21,7 @@ services:
     container_name: iceberg-catalog
     depends_on: [minio]
     ports: ["8181:8181"]
+    user: root    # needed only so sqlite can create /data/iceberg.db in a fresh named volume
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
@@ -29,7 +30,8 @@ services:
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://minio:9000      # MinIO, not real AWS
       CATALOG_S3_PATH__STYLE__ACCESS: "true"      # MinIO answer: yes path-style authentication
-
+      CATALOG_URI: jdbc:sqlite:file:/data/iceberg.db   # registry on a volume (default /tmp + memory = lost every restart)
+    volumes: [catalog-metastore:/data]
   # SQL engine: dlt loads through it, dbt runs through it, superset reads through it
   trino:
     image: trinodb/trino:470
@@ -43,3 +45,4 @@ services:
 
 volumes:
   minio-data:
+  catalog-metastore:   # iceberg REST catalog keeps its sqlite registry here
