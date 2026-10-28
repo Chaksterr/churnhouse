@@ -10,7 +10,7 @@ The value is in the *pipeline*, not in a dashboard project.
 3 CSVs (CRM · support · billing)
       │
       ▼
-   dlt  ──►  BRONZE (raw, append-only)  ──  MinIO + Iceberg + Trino
+   loader ──►  BRONZE (raw, append-only)  ──  MinIO + Iceberg + Trino
       │   dbt
       ▼
    SILVER (clean, masked, tested) ── bad rows → rejected_rows
@@ -32,8 +32,8 @@ Airflow orchestrates nightly. GitHub Actions tests every PR.
 | **MinIO** | the disk (S3-compatible object storage) |
 | **Iceberg** | tables with snapshots / time travel on files |
 | **REST catalog** | the shared registry of tables |
-| **Trino** | the SQL engine (dlt, dbt, Superset all query through it) |
-| **dlt** | append-only ingestion with audit columns |
+| **Trino** | the SQL engine (loader, dbt, Superset all query through it) |
+| **trino python client** | the loader: chunked append-only loads + audit columns |
 | **dbt** | SQL transforms + tests in version control |
 | **Superset** | dashboards |
 | **Airflow** | orchestration + retries + freshness SLA |
@@ -55,7 +55,7 @@ Under construction: ingestion → dbt layers → dashboard → orchestration.
 ```
 ├── docker-compose.yml      # minio + iceberg catalog + trino
 ├── generator/generate.py   # synthetic sources (seeded)
-├── ingestion/              # dlt → bronze
+├── ingestion/              # loader → bronze (append-only)
 ├── dbt/                    # silver + gold models + tests
 └── orchestration/          # airflow dags + CI
 ```
