@@ -63,3 +63,34 @@ models:
     columns:
       - name: reason
         data_tests: [not_null]
+
+  - name: customer_360
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+
+  - name: customer_risk
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: score
+        data_tests: [not_null]
+      - name: band
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [low, medium, high]
+      - name: reasons
+        data_tests: [not_null]
+
+  - name: monthly_revenue
+    columns:
+      - name: month_start
+        data_tests: [unique, not_null]
+      - name: revenue
+        data_tests: [not_null]
+
+  - name: risk_validation
+    columns:
+      - name: band
+        data_tests: [unique, not_null]

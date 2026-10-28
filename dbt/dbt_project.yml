@@ -9,3 +9,7 @@ clean-targets: ["target"]
 models:
   churnhouse:
     +materialized: table   # real iceberg tables, not views
+    silver:
+      +schema: silver      # folder = layer (override macro makes dbt use the name literally)
+    gold:
+      +schema: gold

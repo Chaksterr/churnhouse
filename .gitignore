@@ -5,6 +5,7 @@
 PLAN.md
 CONCEPTS.md
 PHASE4.md
+PHASE5.md
 
 # raw + generated data (stays local, never committed)
 data/
