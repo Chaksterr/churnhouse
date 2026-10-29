@@ -43,6 +43,19 @@ services:
       MINIO_PASSWORD: ${MINIO_PASSWORD}
     volumes: ["./trino/catalog:/etc/trino/catalog"]   # our iceberg.properties is the config
 
+  # the showcase: BI app that reads gold through the same trino
+  superset:
+    build: ./superset                # lean superset image + sqlalchemy-trino driver
+    image: churnhouse-superset:6.1.0-trino
+    container_name: superset
+    depends_on: [trino]
+    ports: ["8088:8088"]
+    env_file: .env                   # SUPERSET_SECRET_KEY comes from the root .env
+    environment:
+      SUPERSET_LOAD_EXAMPLES: "no"   # we have real data - no demo dashboards
+    volumes: [superset-data:/app/superset_home]   # settings + metadata survive restarts
+
 volumes:
   minio-data:
   catalog-metastore:   # iceberg REST catalog keeps its sqlite registry here
+  superset-data:

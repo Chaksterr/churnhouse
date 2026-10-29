@@ -6,9 +6,12 @@ PLAN.md
 CONCEPTS.md
 PHASE4.md
 PHASE5.md
+PHASE6.md
 
 # raw + generated data (stays local, never committed)
+# data + personal things
 data/
+docs/img/
 
 # build artifacts
 target/
