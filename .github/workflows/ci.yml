@@ -82,6 +82,18 @@ jobs:
           done
           echo "trino did not signal started:true in 180 s"; docker compose logs trino; exit 1
 
+      - name: create bucket "warehouse" (done by hand in the console locally)
+        run: |
+          for i in $(seq 1 30); do
+            if docker run --rm --network host --entrypoint sh minio/mc -c \
+                 "mc alias set ci http://localhost:9000 admin adminadmin \
+                  && mc mb --ignore-existing ci/warehouse"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "could not create bucket warehouse in 60 s"; docker compose logs minio; exit 1
+
       - name: create empty bronze tables (loader --schema-only, no data needed)
         run: uv run python ingestion/load_bronze.py --schema-only
 

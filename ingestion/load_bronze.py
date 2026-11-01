@@ -108,10 +108,8 @@ def create_table(cur, table: str, ingested_at_type: str) -> None:
     cols.append(f"ingested_at {ingested_at_type}")
     cols.append("source_file varchar")
     sql = f"CREATE TABLE IF NOT EXISTS bronze.{table} ({', '.join(cols)})"
-    try:
-        cur.execute(sql)
-    except trino.exceptions.TrinoQueryError:
-        pass  # already exists from a previous run
+    cur.execute(sql)
+    cur.fetchall()  # trino reports DDL errors on fetch - without it a failed create passes silently
 
 
 def load_table(cur, table: str, path: Path, ingested_at: str) -> int:
