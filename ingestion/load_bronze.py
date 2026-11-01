@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import re
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -143,6 +144,19 @@ def insert_batch(cur, table: str, cols_sql: str, batch: list[dict]) -> int:
 
 
 def main() -> None:
+    if "--schema-only" in sys.argv:
+        # CI mode: create the bronze schema + 4 empty tables, load nothing.
+        # (data/ CSVs don't exist on a runner; dbt build can still run + test)
+        conn = trino.dbapi.connect(host="localhost", port=8080, user="admin",
+                                   catalog="iceberg", schema="bronze")
+        cur = conn.cursor()
+        cur.execute("CREATE SCHEMA IF NOT EXISTS bronze")
+        cur.fetchall()
+        for table in SCHEMAS:
+            create_table(cur, table, "varchar")
+        print(f"schema-only: bronze ready ({len(SCHEMAS)} empty tables, no rows loaded)")
+        return
+
     ingested_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"run stamp: {ingested_at}")
     t0 = time.perf_counter()

@@ -6,6 +6,7 @@ services:
   minio:
     image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     container_name: minio
+    restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_USER}        # bitnami names them MINIO_ROOT_*
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
@@ -15,13 +16,32 @@ services:
     ports: ["9000:9000", "9001:9001"]
     volumes: [minio-data:/bitnami/minio/data]
 
+  # catalog registry on postgres: sqlite died with SQLITE_BUSY once two commits
+  # ran at once (dbt works concurrently) - MVCC ends that lock class
+  iceberg-meta:
+    image: postgres:16-alpine
+    container_name: iceberg-meta
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iceberg
+      POSTGRES_PASSWORD: icebergadmin
+      POSTGRES_DB: iceberg
+    volumes: [iceberg-meta:/var/lib/postgresql/data]
+    healthcheck:                # the catalog may only boot once postgres answers
+      test: [CMD-SHELL, "pg_isready -U iceberg"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
   # knows which tables exist and where the metadata files are
   iceberg-catalog:
     image: tabulario/iceberg-rest:latest
     container_name: iceberg-catalog
-    depends_on: [minio]
+    restart: unless-stopped
+    depends_on:
+      iceberg-meta:
+        condition: service_healthy
     ports: ["8181:8181"]
-    user: root    # needed only so sqlite can create /data/iceberg.db in a fresh named volume
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
@@ -30,12 +50,14 @@ services:
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://minio:9000      # MinIO, not real AWS
       CATALOG_S3_PATH__STYLE__ACCESS: "true"      # MinIO answer: yes path-style authentication
-      CATALOG_URI: jdbc:sqlite:file:/data/iceberg.db   # registry on a volume (default /tmp + memory = lost every restart)
-    volumes: [catalog-metastore:/data]
-  # SQL engine: dlt loads through it, dbt runs through it, superset reads through it
+      # postgres registry; creds ride in the URI (become jdbc.username/password)
+      CATALOG_URI: "jdbc:postgresql://iceberg-meta:5432/iceberg?user=iceberg&password=icebergadmin"
+
+  # loader, dbt and superset all run SQL through it
   trino:
     image: trinodb/trino:470
     container_name: trino
+    restart: unless-stopped
     depends_on: [iceberg-catalog]
     ports: ["8080:8080"]
     environment:
@@ -48,6 +70,7 @@ services:
     build: ./superset                # lean superset image + sqlalchemy-trino driver
     image: churnhouse-superset:6.1.0-trino
     container_name: superset
+    restart: unless-stopped
     depends_on: [trino]
     ports: ["8088:8088"]
     env_file: .env                   # SUPERSET_SECRET_KEY comes from the root .env
@@ -57,5 +80,6 @@ services:
 
 volumes:
   minio-data:
-  catalog-metastore:   # iceberg REST catalog keeps its sqlite registry here
+  iceberg-meta:        # the live catalog registry (postgres)
+  catalog-metastore:   # retired sqlite registry, kept as backup only
   superset-data:

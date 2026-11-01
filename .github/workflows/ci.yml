@@ -1,0 +1,97 @@
+# churnhouse CI — runs on every PR and on push to main.
+#
+#   job 1  dbt-parse : syntax gate, no infra (~30 s)
+#   job 2  dbt-build : boots a throwaway lakehouse (minio + catalog + trino),
+#                      creates empty bronze tables via loader --schema-only,
+#                      then dbt build = silver/gold models + all 35 tests.
+#
+# superset stays down; .env is written from dummy values just so
+# docker-compose.yml interpolation succeeds.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}        # one run per branch; new push cancels the old
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # --------------------------------------------------------------- syntax gate
+  dbt-parse:
+    name: dbt parse (fast, no infra)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up uv (cached via uv.lock)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: install dependencies
+        run: uv sync --frozen
+
+      - name: parse every dbt model / test / macro
+        run: uv run dbt parse --project-dir dbt --profiles-dir dbt --no-use-colors
+
+  # -------------------------------------------------------- throwaway lakehouse
+  dbt-build:
+    name: dbt build on empty stack (models + 35 tests)
+    runs-on: ubuntu-latest
+    needs: dbt-parse            # don't pay for the heavy job if syntax is broken
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up uv (cached via uv.lock)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: install dependencies
+        run: uv sync --frozen
+
+      - name: write throwaway .env (docker-compose.yml interpolates from it)
+        run: |
+          {
+            echo "MINIO_USER=admin"
+            echo "MINIO_PASSWORD=adminadmin"
+            echo "SUPERSET_USER=admin"
+            echo "SUPERSET_PASSWORD=change-me-123"
+            echo "SUPERSET_SECRET_KEY=ci-placeholder-not-a-real-secret"
+          } > .env
+
+      - name: start minio + iceberg catalog + trino (superset stays home)
+        run: docker compose up -d minio iceberg-catalog trino
+
+      - name: wait for trino (up to 3 min)
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8080/v1/info | grep -q '"started":true'; then
+              echo "trino ready after ${i}x2s"; exit 0
+            fi
+            sleep 2
+          done
+          echo "trino did not signal started:true in 180 s"; docker compose logs trino; exit 1
+
+      - name: create empty bronze tables (loader --schema-only, no data needed)
+        run: uv run python ingestion/load_bronze.py --schema-only
+
+      - name: dbt build — silver + gold models, every test, fail-fast order
+        run: uv run dbt build --project-dir dbt --profiles-dir dbt --no-use-colors
+
+      - name: upload dbt run results (only when the build fails)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-run-results
+          path: dbt/target/run_results.json
+          if-no-files-found: ignore

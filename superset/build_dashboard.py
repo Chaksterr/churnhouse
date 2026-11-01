@@ -1,7 +1,6 @@
-# Builds the Churn House dashboard via the Superset API - no clicking.
-# Run:  uv run python superset/build_dashboard.py
-# Idempotent: existing charts / dashboard are re-used by name.
-# Gate checks compare every chart against live trino before saving.
+# Builds the Churn House dashboard via the Superset API, no clicking.
+# Run: uv run python superset/build_dashboard.py (idempotent - every chart is
+# gate-checked against live trino before anything is saved).
 import json
 
 from trino.dbapi import connect
@@ -278,19 +277,17 @@ def main():
                    "y_axis_label": "revenue $", "y_axis_format": "SMART_NUMBER",
                    "color_scheme": "supersetColors"}
 
-    # ---- chart B: customers donut (gate: 4919/1578/546) ----------------------
+    # ---- chart B: customers by band (gate: 4919/1578/546) -------------------
     qc_pie = qc(ds_val, ["band"], [simple_metric(ds_val, "customers", "SUM")],
                 orderby=[["customers", False]])
     rows = run_query(qc_pie, token, csrf)
     by_band = {r.get("band"): r.get("customers") for r in rows}
     ok = by_band == cust_truth
-    print("  gate B (donut):", "PASS" if ok else f"FAIL {by_band}")
+    print("  gate B (customers):", "PASS" if ok else f"FAIL {by_band}")
     if not ok:
         fail("chart B gate failed - not saving")
     # ---- chart B: customers by band as BARS (gate: 4919/1578/546) -------------
-    # the pie plugin's param contract proved brittle from the api; the bar
-    # plugin contract is proven by chart C (same form, renders fine). same
-    # story, a shape that will not crash the frontend. permanent call.
+    # pie proved brittle over the API - bars reuse the proven chart-C contract
     custbar_params = {"viz_type": "echarts_timeseries_bar",
                       "datasetId": ds_val["id"],
                       "x_axis": "band",

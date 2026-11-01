@@ -9,15 +9,12 @@ PHASE5.md
 PHASE6.md
 
 # raw + generated data (stays local, never committed)
-# data + personal things
 data/
 docs/img/
 
 # build artifacts
 target/
 dbt/logs/
-dbt/.user.yml
-# dbt profile: committed on purpose — trino needs no password (host/port/user only)
 __pycache__/
 .venv/
 *.duckdb
@@ -26,3 +23,17 @@ __pycache__/
 .DS_Store
 .idea/
 *.swp
+
+# dbt writes its anonymous-usage id here (machine-specific, stays local)
+dbt/.user.yml
+
+# airflow runtime (local only): metadata db, generated config, logs, admin password
+orchestration/airflow.db*
+orchestration/airflow.cfg
+orchestration/logs/
+orchestration/standalone_admin_password.txt
+orchestration/simple_auth_manager_passwords.json.generated
+orchestration/webserver_config.py
+
+# dbt also writes its log to cwd when run from the repo root
+logs/
