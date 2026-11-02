@@ -7,6 +7,7 @@ CONCEPTS.md
 PHASE4.md
 PHASE5.md
 PHASE6.md
+docs/PROJECT_GUIDE.md
 
 # raw + generated data (stays local, never committed)
 data/

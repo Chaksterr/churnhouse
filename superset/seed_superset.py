@@ -89,7 +89,7 @@ def main():
             db_id = matches[0][0]
             print(f"✓ database already exists: {DB_NAME} (id {db_id})")
         else:
-            fail(f"database creation returned {code}: {out}")
+            fail(f"database creation returned {code}: {db}")
 
     # 4. sanity check: does Superset truly reach Trino?
     code, out = call("POST", "/api/v1/database/test_connection/",

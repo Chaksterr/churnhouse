@@ -3,9 +3,8 @@
 # gate-checked against live trino before anything is saved).
 import json
 
-from trino.dbapi import connect
-
 from seed_superset import SCHEMA, call, fail, list_datasets, login_as
+from trino.dbapi import connect
 
 TITLE = "Churn House"
 HERO_MD = (

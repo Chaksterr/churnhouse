@@ -17,9 +17,10 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import trino
 import trino.dbapi
 from airflow.decorators import dag, task
+
+import trino
 
 REPO = Path(__file__).resolve().parents[2]  # orchestration/dags/*.py -> repo root
 

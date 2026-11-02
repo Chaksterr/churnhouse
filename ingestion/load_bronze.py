@@ -17,8 +17,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-import trino
 import trino.dbapi
+
+import trino
 
 CHUNK = 2000  # rows per INSERT statement
 
@@ -141,15 +142,21 @@ def insert_batch(cur, table: str, cols_sql: str, batch: list[dict]) -> int:
     return len(batch)
 
 
+def connect():
+    conn = trino.dbapi.connect(host="localhost", port=8080, user="admin",
+                               catalog="iceberg", schema="bronze")
+    cur = conn.cursor()
+    cur.execute("CREATE SCHEMA IF NOT EXISTS bronze")  # fresh lakehouse: no manual setup
+    cur.fetchall()
+    return cur
+
+
 def main() -> None:
+    cur = connect()
+
     if "--schema-only" in sys.argv:
-        # CI mode: create the bronze schema + 4 empty tables, load nothing.
+        # CI mode: create the 4 empty bronze tables, load nothing.
         # (data/ CSVs don't exist on a runner; dbt build can still run + test)
-        conn = trino.dbapi.connect(host="localhost", port=8080, user="admin",
-                                   catalog="iceberg", schema="bronze")
-        cur = conn.cursor()
-        cur.execute("CREATE SCHEMA IF NOT EXISTS bronze")
-        cur.fetchall()
         for table in SCHEMAS:
             create_table(cur, table, "varchar")
         print(f"schema-only: bronze ready ({len(SCHEMAS)} empty tables, no rows loaded)")
@@ -158,12 +165,6 @@ def main() -> None:
     ingested_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"run stamp: {ingested_at}")
     t0 = time.perf_counter()
-
-    conn = trino.dbapi.connect(
-        host="localhost", port=8080, user="admin",
-        catalog="iceberg", schema="bronze",
-    )
-    cur = conn.cursor()
 
     total = 0
     for table, file in CSV_FILES.items():

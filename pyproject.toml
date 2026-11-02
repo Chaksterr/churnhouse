@@ -1,6 +1,7 @@
 [project]
 name = "churnhouse"
 version = "0.1.0"
+description = "Local Iceberg lakehouse (MinIO + Trino + dbt + Airflow + Superset) that scores telecom churn risk"
 requires-python = ">=3.13"
 dependencies = [
     "apache-airflow>=3.3.2",
@@ -8,3 +9,10 @@ dependencies = [
     "faker>=40.43.0",
     "trino>=0.340.0",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

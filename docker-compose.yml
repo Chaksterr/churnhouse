@@ -1,5 +1,5 @@
 # churnhouse lakehouse: minio (disk) + iceberg REST catalog (address book) + trino (SQL)
-# creds come from .env | bucket `warehouse` is created by hand in the console (:9001)
+# creds come from .env | bucket `warehouse` is created on boot (MINIO_DEFAULT_BUCKETS)
 
 services:
   # disk: S3-style storage. data lives in the minio-data volume.
@@ -13,6 +13,7 @@ services:
       MINIO_API_PORT_NUMBER: "9000"
       MINIO_CONSOLE_PORT_NUMBER: "9001"
       MINIO_BROWSER: "on"                   # bitnami quirk: console is OFF without this
+      MINIO_DEFAULT_BUCKETS: warehouse      # bucket created on boot, no manual console step
     ports: ["9000:9000", "9001:9001"]
     volumes: [minio-data:/bitnami/minio/data]
 
@@ -81,5 +82,4 @@ services:
 volumes:
   minio-data:
   iceberg-meta:        # the live catalog registry (postgres)
-  catalog-metastore:   # retired sqlite registry, kept as backup only
   superset-data:
