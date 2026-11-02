@@ -58,7 +58,7 @@ flowchart LR
     SI -->|dbt| GO
     GO --> SU[📊 Superset dashboard]
 
-    AF[⏰ Airflow · daily 02:00 UTC] -. orchestrates .-> BR & SI & GO
+    AF[⏰ Airflow] -. orchestrates .-> BR & SI & GO
 ```
 
 | Component | Role |
